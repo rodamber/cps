@@ -17,7 +17,7 @@ class Vector:
         """Construct a vector from a numpy array."""
         assert len(array.shape) == 1
 
-        v = Vector()
+        v = vec()
         v.array = array
 
         return v
@@ -30,19 +30,17 @@ class Vector:
     def __mul__(self, x):
         """Vector scalar product + Hilbert space vector inner product + vector
         matrix product. """
-        return matmul(self, x)
+        assert isinstance(x, numbers.Number) or \
+            isinstance(x, Vector) or \
+            isinstance(x, Matrix)
+        return matmul(self, x, outer=False)
 
     def __pow__(self, x):
         """Hilbert space outer product."""
         assert isinstance(x, Vector)
-        assert self.array.shape == x.array.shape
+        return matmul(self, x, outer=True)
 
-        v0 = self.array.reshape(-1, 1)  # n x 1 matrix
-        v1 = x.array.reshape(1, -1)  # 1 x n matrix
-
-        return Matrix(np.dot(v0, v1.conj()))
-
-    def __mod__(self, x):
+    def __xor__(self, x):
         """Tensor product."""
         return tensor(self, x)
 
@@ -56,6 +54,8 @@ class Vector:
 
 
 class Matrix:
+    """Represents an mn-dimensional matrix."""
+
     def __init__(self, *elems, m=None, n=None, reshape=True):
         """Construct a mn-matrix from a list, tuple or a numpy array."""
         assert len(elems) > 0
@@ -75,14 +75,14 @@ class Matrix:
     def __add__(self, x):
         """Element-wise addition."""
         assert isinstance(x, Matrix)
-        return Matrix(self.array + x.array, reshape=False)
+        return mat(self.array + x.array, reshape=False)
 
     def __mul__(self, x):
         """Matrix scalar product + matrix vector product + matrix matrix
         product. """
         return matmul(self, x)
 
-    def __mod__(self, x):
+    def __xor__(self, x):
         """Tensor product."""
         return tensor(self, x)
 
@@ -95,18 +95,29 @@ class Matrix:
         return (self.array == x.array).all()
 
 
-def matmul(x, y):
+def matmul(x, y, outer=False):
+    """Matrix/vector scalar/inner/outer/matrix product."""
+
     # Matrix scalar product.
     if isinstance(x, Matrix) and isinstance(y, numbers.Number):
-        return Matrix(x.array * y)
+        return mat(x.array * y)
     elif isinstance(x, numbers.Number) and isinstance(y, Matrix):
-        return Matrix(x * y.array)
+        return mat(x * y.array)
 
     # Vector scalar product.
     elif isinstance(x, Vector) and isinstance(y, numbers.Number):
-        return Vector(x.array * y)
+        return vec(x.array * y)
     elif isinstance(x, numbers.Number) and isinstance(y, Vector):
-        return Vector(x * y.array)
+        return vec(x * y.array)
+
+    # Hilbert space vector outer product.
+    elif outer and isinstance(x, Vector) and isinstance(y, Vector):
+        assert x.array.shape == y.array.shape
+
+        ax = x.array.reshape(-1, 1)  # n x 1 matrix
+        ay = y.array.reshape(1, -1)  # 1 x n matrix
+
+        return mat(np.dot(ax, ay.conj()))
 
     # Hilbert space vector inner product.
     elif isinstance(x, Vector) and isinstance(y, Vector):
@@ -118,17 +129,17 @@ def matmul(x, y):
         # Number of columns of the matrix must equal the number of rows of
         # the vector.
         assert x.array.shape[1] == y.array.shape[0]
-        return Matrix(np.dot(x.array.conjugate(), y.array.reshape(-1, 1)))
+        return mat(np.dot(x.array.conjugate(), y.array.reshape(-1, 1)))
     elif isinstance(x, Vector) and isinstance(y, Matrix):
         # Number of columns of the vector must equal the number of rows of
         # the matrix.
         assert x.array.shape[0] == y.array.shape[0]
-        return Matrix(np.dot(x.array.reshape(1, -1).conjugate(), y.array))
+        return mat(np.dot(x.array.reshape(1, -1).conjugate(), y.array))
     elif isinstance(x, Matrix) and isinstance(y, Matrix):
         # Number of columns of the left matrix must equal the number of
         # rows of the right matrix.
         assert x.array.shape[1] == y.array.shape[0]
-        return Matrix(np.dot(x.array.conjugate(), y.array))
+        return mat(np.dot(x.array.conjugate(), y.array))
 
     else:
         raise TypeError("can't multiply " + type(x).__name__ + " by " +
@@ -136,13 +147,33 @@ def matmul(x, y):
 
 
 def tensor(x, y):
+    """Kronecker/tensor product."""
+
     if isinstance(x, Vector) and isinstance(y, Vector):
         return Vector.from_array(np.kron(x.array, y.array))
     elif isinstance(x, Vector) and isinstance(y, Matrix):
-        return Matrix(np.kron(x.array, y.array))
+        return mat(np.kron(x.array, y.array))
     elif isinstance(x, Matrix) and isinstance(y, Vector):
-        return Matrix(np.kron(x.array, y.array.reshape(-1, 1)))
+        return mat(np.kron(x.array, y.array.reshape(-1, 1)))
     elif isinstance(x, Matrix) and isinstance(y, Matrix):
-        return Matrix(np.kron(x.array, y.array))
+        return mat(np.kron(x.array, y.array))
     else:
         raise TypeError("tensor: arguments must by of type Vector or Matrix.")
+
+
+# Shorter names for stuff
+
+
+def vec(*elems):
+    """Convenience vector constructor with shorter name."""
+    return Vector(*elems)
+
+
+def mat(*elems, m=None, n=None, reshape=True):
+    """Convenience matrix constructor with shorter name."""
+    return Matrix(*elems, m=m, n=n, reshape=reshape)
+
+
+def conj(x):
+    """Conjugate of x."""
+    return x.conjugate()

@@ -1,104 +1,75 @@
 #!/usr/bin/env python3
 
+import string
+from sympy import Symbol
 
-from linalg import *
+from linalg import conj, vec, mat, tensor
+
+a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z \
+    = [Symbol(x) for x in string.ascii_lowercase]
 
 
 def test_mul():
-    import string
-    from sympy import Symbol
+    assert vec(a, b) * vec(c, d) == c * conj(a) + d * conj(b)
 
-    a, b, c, d, e, f, g, h = [Symbol(x) for x in string.ascii_letters[:8]]
+    assert vec(e, f) * mat(a, b, c, d, m=2, n=2) == \
+        mat(a * conj(e) + c * conj(f),
+            b * conj(e) + d * conj(f), m=1, n=2)
 
-    def conj(x):
-        return x.conjugate()
+    assert mat(a, b, c, d, m=2, n=2) * vec(e, f) == \
+        mat(conj(a) * e + conj(b) * f,
+            conj(c) * e + conj(d) * f, m=2, n=1)
 
-    assert Vector(a, b) * Vector(c, d) == \
-        c * a.conjugate() + d * b.conjugate()
-
-    assert Vector(e, f) * Matrix(a, b, c, d, m=2, n=2) == \
-        Matrix(a * conj(e) + c * conj(f),
-               b * conj(e) + d * conj(f), m=1, n=2)
-
-    assert Matrix(a, b, c, d, m=2, n=2) * Vector(e, f) == \
-        Matrix(conj(a) * e + conj(b) * f,
-               conj(c) * e + conj(d) * f, m=2, n=1)
-
-    assert Matrix(a, b, c, d, m=2, n=2) * Matrix(e, f, g, h, m=2, n=2) == \
-        Matrix(conj(a) * e + conj(b) * g, conj(a) * f + conj(b) * h,
-               conj(c) * e + conj(d) * g, conj(c) * f + conj(d) * h, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) * mat(e, f, g, h, m=2, n=2) == \
+        mat(conj(a) * e + conj(b) * g, conj(a) * f + conj(b) * h,
+            conj(c) * e + conj(d) * g, conj(c) * f + conj(d) * h, m=2, n=2)
 
 
-def test_pow():
-    import string
-    from sympy import Symbol
-
-    a, b, c, d = [Symbol(x) for x in string.ascii_letters[:4]]
-
-    def conj(x):
-        return x.conjugate()
-
-    assert Vector(a, b) ** Vector(c, d) == \
-        Matrix(a * conj(c), a * conj(d),
-               b * conj(c), b * conj(d), m=2, n=2)
+def test_outer_product():
+    assert vec(a, b) ** vec(c, d) == \
+        mat(a * conj(c), a * conj(d),
+            b * conj(c), b * conj(d), m=2, n=2)
 
 
-def test_tensor():
-    import string
-    from sympy import Symbol
+def test_tensor_product():
+    assert tensor(vec(a, b), vec(c, d)) == \
+        vec(a * c, a * d, b * c, b * d)
 
-    a, b, c, d, e, f, g, h = [Symbol(x) for x in string.ascii_letters[:8]]
+    assert tensor(mat(a, b, c, d, m=2, n=2), mat(e, f, g, h, m=2, n=2)) == \
+        mat(a * e, a * f, b * e, b * f,
+            a * g, a * h, b * g, b * h,
+            c * e, c * f, d * e, d * f,
+            c * g, c * h, d * g, d * h, m=4, n=4)
 
-    assert tensor(Vector(a, b), Vector(c, d)) == \
-        Vector(a * c, a * d, b * c, b * d)
+    assert tensor(vec(a, b), mat(e, f, g, h, m=2, n=2)) == \
+        mat(a * e, a * f, b * e, b * f,
+            a * g, a * h, b * g, b * h, m=2, n=4)
 
-    assert tensor(Matrix(a, b, c, d, m=2, n=2),
-                  Matrix(e, f, g, h, m=2, n=2)) == \
-        Matrix(a * e, a * f, b * e, b * f,
-               a * g, a * h, b * g, b * h,
-               c * e, c * f, d * e, d * f,
-               c * g, c * h, d * g, d * h, m=4, n=4)
-
-    assert tensor(Vector(a, b), Matrix(e, f, g, h, m=2, n=2)) == \
-        Matrix(a * e, a * f, b * e, b * f,
-               a * g, a * h, b * g, b * h, m=2, n=4)
-
-    assert tensor(Matrix(e, f, g, h, m=2, n=2), Vector(a, b)) == \
-        Matrix(e * a, f * a,
-               e * b, f * b,
-               g * a, h * a,
-               g * b, h * b, m=4, n=2)
+    assert tensor(mat(e, f, g, h, m=2, n=2), vec(a, b)) == \
+        mat(e * a, f * a,
+            e * b, f * b,
+            g * a, h * a,
+            g * b, h * b, m=4, n=2)
 
 
 def test_add():
-    import string
-    from sympy import Symbol
+    assert vec(a, b) + vec(c, d) == vec(a + c, b + d)
 
-    a, b, c, d, e, f, g, h = [Symbol(x) for x in string.ascii_letters[:8]]
-
-    assert Vector(a, b) + Vector(c, d) == \
-        Vector(a + c, b + d)
-
-    assert Matrix(a, b, c, d, m=2, n=2) + Matrix(e, f, g, h, m=2, n=2) == \
-        Matrix(a + e, b + f,
-               c + g, d + h, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) + mat(e, f, g, h, m=2, n=2) == \
+        mat(a + e, b + f,
+            c + g, d + h, m=2, n=2)
 
 
 def test_eq():
-    import string
-    from sympy import Symbol
+    assert vec(a, b) == vec(a, b)
 
-    a, b, c, d, e, f, g, h = [Symbol(x) for x in string.ascii_letters[:8]]
+    assert vec(a, b) != vec(a, f)
+    assert vec(a, b) != vec(e, b)
+    assert vec(a, b) != vec(e, f)
 
-    assert Vector(a, b) == Vector(a, b)
+    assert mat(a, b, c, d, m=2, n=2) == mat(a, b, c, d, m=2, n=2)
 
-    assert Vector(a, b) != Vector(a, f)
-    assert Vector(a, b) != Vector(e, b)
-    assert Vector(a, b) != Vector(e, f)
-
-    assert Matrix(a, b, c, d, m=2, n=2) == Matrix(a, b, c, d, m=2, n=2)
-
-    assert Matrix(a, b, c, d, m=2, n=2) != Matrix(e, b, c, d, m=2, n=2)
-    assert Matrix(a, b, c, d, m=2, n=2) != Matrix(a, f, c, d, m=2, n=2)
-    assert Matrix(a, b, c, d, m=2, n=2) != Matrix(a, b, g, d, m=2, n=2)
-    assert Matrix(a, b, c, d, m=2, n=2) != Matrix(a, b, c, h, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) != mat(e, b, c, d, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) != mat(a, f, c, d, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) != mat(a, b, g, d, m=2, n=2)
+    assert mat(a, b, c, d, m=2, n=2) != mat(a, b, c, h, m=2, n=2)
