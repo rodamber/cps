@@ -5,30 +5,38 @@ import numbers
 
 
 class Vector:
+    """Represents an n-dimensional vector."""
+
     def __init__(self, *elems):
+        """Construct a vector from variadic arguments. It's internally
+        represented as a numpy array."""
         self.array = np.array(elems)
 
     @staticmethod
     def from_array(array):
+        """Construct a vector from a numpy array."""
+        assert len(array.shape) == 1
+
         v = Vector()
         v.array = array
+
         return v
 
     def __add__(self, x):
+        """Element-wise addition."""
         assert isinstance(x, Vector)
         return Vector.from_array(self.array + x.array)
 
     def __mul__(self, x):
+        """Vector scalar product + Hilbert space vector inner product + vector
+        matrix product. """
+
         if isinstance(x, numbers.Number):
-            # Scalar product.
             return Vector.from_array(self.array * x)
 
         elif isinstance(x, Vector):
             assert self.array.shape == x.array.shape
-
-            # Hilbert space inner product.
-            y = np.dot(self.array.conjugate(), x.array)
-            return y
+            return np.dot(self.array.conjugate(), x.array)
 
         elif isinstance(x, Matrix):
             # Number of columns of the vector must equal the number of rows of
@@ -48,31 +56,40 @@ class Vector:
 
         v0 = self.array.reshape(-1, 1)  # n x 1 matrix
         v1 = x.array.reshape(1, -1)  # 1 x n matrix
+
         return np.dot(v0, v1.conj())
 
     def __repr__(self):
         return self.array.__str__()
 
     def __eq__(self, x):
+        """Element-wise equality."""
         assert isinstance(x, Vector)
         return (self.array == x.array).all()
 
 
 class Matrix:
     def __init__(self, array, m=1, n=-1, reshape=True):
+        """Construct a mn-matrix from a list, tuple or a numpy array."""
+
         if isinstance(array, np.ndarray):
             self.array = array
         else:
+            assert hasattr(type(array), '__iter__')
             self.array = np.array(array)
 
         if reshape:
             self.array = self.array.reshape(m, n)
 
     def __add__(self, x):
+        """Element-wise addition."""
         assert isinstance(x, Matrix)
         return Matrix(self.array + x.array, reshape=False)
 
     def __mul__(self, x):
+        """Matrix scalar product + matrix vector product + matrix matrix
+        product. """
+
         if isinstance(x, numbers.Number):
             return Matrix(self.array * x)
 
@@ -88,7 +105,6 @@ class Matrix:
             # Number of columns of the left matrix must equal the number of
             # rows of the right matrix.
             assert self.array.shape[1] == x.array.shape[0]
-
             return Matrix(
                 np.dot(self.array.conjugate(), x.array), reshape=False)
 
@@ -100,6 +116,7 @@ class Matrix:
         return self.array.__str__()
 
     def __eq__(self, x):
+        """Element-wise equality."""
         assert isinstance(x, Matrix)
         return (self.array == x.array).all()
 
