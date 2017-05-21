@@ -53,11 +53,12 @@ class Vector:
     def __pow__(self, x):
         """Hilbert space outer product."""
         assert isinstance(x, Vector)
+        assert self.array.shape == x.array.shape
 
         v0 = self.array.reshape(-1, 1)  # n x 1 matrix
         v1 = x.array.reshape(1, -1)  # 1 x n matrix
 
-        return np.dot(v0, v1.conj())
+        return Matrix(np.dot(v0, v1.conj()), self.array.shape[0], -1)
 
     def __repr__(self):
         return self.array.__str__()
@@ -158,6 +159,20 @@ def test_mul():
     assert Matrix([a, b, c, d], 2, 2) * Matrix([e, f, g, h], 2, 2) == \
         Matrix([conj(a) * e + conj(b) * g, conj(a) * f + conj(b) * h,
                 conj(c) * e + conj(d) * g, conj(c) * f + conj(d) * h], 2, 2)
+
+
+def test_pow():
+    import string
+    from sympy import Symbol
+
+    a, b, c, d = [Symbol(x) for x in string.ascii_letters[:4]]
+
+    def conj(x):
+        return x.conjugate()
+
+    assert Vector(a, b) ** Vector(c, d) == \
+        Matrix([a * conj(c), a * conj(d),
+                b * conj(c), b * conj(d)], 2, 2)
 
 
 def test_eq():
