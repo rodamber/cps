@@ -48,37 +48,36 @@ def prime(n):
         return not any(n % x == 0 for x in range(3, ceil(sqrt(n)), 2))
 
 
+def found(factors, f):
+    if f > 1:
+        factors.append(f)
+
+
 def factorize(N):
     """Shor's algorithm."""
     factors = []
 
-    while not prime(N):
+    while N > 1 and not prime(N):
         while N % 2 == 0:
-            factors.append(2)
+            found(factors, 2)
             N //= 2
+        if N > 1:
+            x = randint(2, N - 1)
+            d = gcd(x, N)
+            if d != 1:  # Then d is a factor of N.
+                found(factors, d)
+                N //= d
+            else:
+                r = __order(x, N)
+                y = r // 2
+                if r % 2 == 0 and 1 < y < N - 1:
+                    f1 = gcd(y - 1, N)
+                    f2 = gcd(y + 1, N)
 
-        if N == 1:
-            break
+                    found(factors, f1)
+                    found(factors, f1)
 
-        x = randint(2, N - 1)
-        d = gcd(x, N)
+                    N = N // f1 // f2
 
-        if d != 1:  # Then d is a factor of N.
-            factors.append(d)
-            N //= d
-        else:
-            r = __order(x, N)
-            y = r // 2
-
-            if r % 2 == 0 and 1 < y < N - 1:
-                f1 = gcd(y - 1, N)
-                f2 = gcd(y + 1, N)
-
-                factors.append(f1)
-                factors.append(f2)
-
-                N //= f1
-                N //= f2
-
-    factors.append(N)
+    found(factors, N)
     return factors
