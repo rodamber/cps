@@ -1,0 +1,113 @@
+\documentclass{article}
+
+\usepackage[a4paper, total={6in, 8in}]{geometry}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
+\usepackage{braket}
+\usepackage{mathtools}
+
+% \title{Cryptography and Security Protocols\\ Project Report}
+\title{Shor's Algorithm}
+% \author{
+%   José Semedo\\
+%   ist178294
+%   \and
+%   Rodrigo Bernardo\\
+%   ist178942
+% }
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% \section{Shor's Algorithm}
+
+\begin{enumerate}
+\item Pick $x$ at random s.t. $1<x<N$
+
+\item If $GCD(x,N) = d \neq 1$ then $d$ is a factor of $N$, so we recurse on $N/d$.
+Else $x$ and $N$ are coprime, so we try to find the multiplicative order of $x$
+modulo $N$.
+
+The quantum computer is initialized to $\ket{\psi_0} = \ket{0}\ket{0}$.
+Register one has $t$ qubits ($N^2 \leq 2^t < 2N^2$), and register two has $n =
+\lceil{\log _2 N}\rceil$ qubits.
+
+\item Apply the Hadamard operator $t$ times to the first register, yielding
+  \begin{equation}
+    \ket{\psi_1} = H^{\otimes{t}}\ket{\psi_0}
+    = \frac{1}{\sqrt{2^t}}\sum_{j=0}^{2^t-1}\ket{j}\ket{0}
+    \,.
+  \end{equation}
+
+\item Apply the linear operator $V_x(\ket{j}\ket{k}) = \ket{j}\ket{k+x^j}$ to obtain 
+
+  \begin{equation}
+    \begin{aligned}
+      \ket{\psi_2} &= V_x\ket{\psi_1}\\
+      &= \frac{1}{\sqrt{2^t}}\sum_{j=0}^{2^{t}-1}\ket{j}\ket{x^j}\\
+      &= \frac{1}{\sqrt{2^t}}\sum_{b=0}^{r-1}\sum_{a=0}^{\frac{2^t}{r}-1}\ket{ar + b}\ket{x^b}
+      \,.
+    \end{aligned}
+  \end{equation}
+
+\item Measure the second register, fixing $b = b_0$, where $b_0$ is a random
+  number between $0$ and $r-1$, obtaining
+  \begin{equation}
+    \ket{\psi_3}
+    = \sqrt{\frac{r}{2^t}}\sum_{a=0}^{\frac{2^t}{r}-1}\ket{ar +
+      b_0}\ket{x^{b_0}}
+    \,.
+  \end{equation}
+
+\item Apply the inverse Fourier transform, $DFT^{\dagger}(\ket{k}) =
+  \frac{1}{\sqrt{N}}\sum_{j=0}^{N-1}e^{- 2\pi i jk/N}\ket{j}$, yielding
+  \begin{equation}
+    \ket{\psi_4}
+    = \frac{1}{\sqrt{r}}\left(\sum_{j=0}^{2^t-1}
+      \left[\frac{1}{2^{t}/r}\sum_{a=0}^{\frac{2^t}{r}-1}e^{\frac{- 2\pi ija}{2^{t}/r}}\right]
+      e^{- 2\pi ijb_{0}/2^t}\ket{j}\right)\ket{x^{b_0}}
+    \,.
+  \end{equation}
+
+\item Measuring the first register, we get the value $k_{0}2^{t}/r$, for some
+  $k_{0} \in \{ 0, 1, ..., r-1 \}$. If we obtain $k_{0} = 0$ we run the
+  algorithm again. Else we divide $k_{0}2^{t}/r$ by $2^{t}$, obtaining $k_{0}/r$.
+
+\item To extract $r$, we represent $k_{0}/r$ by a finite continued fraction,
+  and then ... ???
+
+\end{enumerate}
+
+\end{document}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
