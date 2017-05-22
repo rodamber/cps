@@ -53,6 +53,7 @@ def state(x, nqubits=1):
     return la.Vector.from_array(st)
 
 
+# This is actually a state, not the qubit itself
 class QBit:
     def __init__(self, alpha, beta):
         self.alpha = alpha
