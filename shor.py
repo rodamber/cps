@@ -31,10 +31,10 @@ def __order(x, N):
     assert gcd(x, N) == 1
 
     r = 2
-    while x**r % N != 1:
+    while pow(x, r, N) != 1:
         r += 1
 
-    assert x**r % N == 1
+    assert pow(x, r, N) == 1
     return r
 
 
