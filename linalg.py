@@ -66,7 +66,12 @@ class Vector:
     def __eq__(self, x):
         """Element-wise equality."""
         assert isinstance(x, Vector)
-        return (self.array == x.array).all()
+        try:
+            return np.allclose(self.array, x.array)
+        except TypeError:
+            # np.allclose doesn't work with arrays of sympy symbols, which we
+            # use for testing.
+            return (self.array == x.array).all()
 
 
 class Matrix:
@@ -108,7 +113,12 @@ class Matrix:
     def __eq__(self, x):
         """Element-wise equality."""
         assert isinstance(x, Matrix)
-        return (self.array == x.array).all()
+        try:
+            return np.allclose(self.array, x.array)
+        except TypeError:
+            # np.allclose doesn't work with arrays of sympy symbols, which we
+            # use for testing.
+            return (self.array == x.array).all()
 
 
 def matmul(x, y, outer=False):
