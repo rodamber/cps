@@ -10,7 +10,7 @@ class Vector:
     def __init__(self, *elems):
         """Construct a vector from variadic arguments or from a sequence. It's
         internally represented as a numpy array."""
-        if hasattr(type(elems[0]), '__iter__'):
+        if len(elems) > 0 and hasattr(type(elems[0]), '__iter__'):
             self.array = np.array(elems[0])
         else:
             self.array = np.array(elems)
