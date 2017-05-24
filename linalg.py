@@ -8,9 +8,12 @@ class Vector:
     """Represents an n-dimensional vector."""
 
     def __init__(self, *elems):
-        """Construct a vector from variadic arguments. It's internally
-        represented as a numpy array."""
-        self.array = np.array(elems)
+        """Construct a vector from variadic arguments or from a sequence. It's
+        internally represented as a numpy array."""
+        if hasattr(type(elems[0]), '__iter__'):
+            self.array = np.array(elems[0])
+        else:
+            self.array = np.array(elems)
 
     @staticmethod
     def from_array(array):
@@ -21,6 +24,19 @@ class Vector:
         v.array = array
 
         return v
+
+    def __getitem__(self, i):
+        return self.array[i]
+
+    def __setitem__(self, i, x):
+        self.array[i] = x
+
+    def __len__(self):
+        return self.array.__len__()
+
+    @property
+    def norm(self):
+        return np.linalg.norm(self.array)
 
     def __add__(self, x):
         """Element-wise addition."""
