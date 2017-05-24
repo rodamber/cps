@@ -155,12 +155,12 @@ def matmul(x, y, outer=False):
         # Number of columns of the matrix must equal the number of rows of
         # the vector.
         assert x.array.shape[1] == y.array.shape[0]
-        return mat(np.dot(x.array.conjugate(), y.array.reshape(-1, 1)))
+        return vec(np.dot(x.array.conjugate(), y.array))
     elif isinstance(x, Vector) and isinstance(y, Matrix):
         # Number of columns of the vector must equal the number of rows of
         # the matrix.
         assert x.array.shape[0] == y.array.shape[0]
-        return mat(np.dot(x.array.reshape(1, -1).conjugate(), y.array))
+        return vec(np.dot(x.array.conjugate(), y.array))
     elif isinstance(x, Matrix) and isinstance(y, Matrix):
         # Number of columns of the left matrix must equal the number of
         # rows of the right matrix.

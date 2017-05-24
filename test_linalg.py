@@ -13,12 +13,10 @@ def test_mul():
     assert vec(a, b) * vec(c, d) == c * conj(a) + d * conj(b)
 
     assert vec(e, f) * mat(a, b, c, d, m=2, n=2) == \
-        mat(a * conj(e) + c * conj(f),
-            b * conj(e) + d * conj(f), m=1, n=2)
+        vec(a * conj(e) + c * conj(f), b * conj(e) + d * conj(f))
 
     assert mat(a, b, c, d, m=2, n=2) * vec(e, f) == \
-        mat(conj(a) * e + conj(b) * f,
-            conj(c) * e + conj(d) * f, m=2, n=1)
+        vec(conj(a) * e + conj(b) * f, conj(c) * e + conj(d) * f)
 
     assert mat(a, b, c, d, m=2, n=2) * mat(e, f, g, h, m=2, n=2) == \
         mat(conj(a) * e + conj(b) * g, conj(a) * f + conj(b) * h,
