@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from random import randint
-from math import gcd, ceil, sqrt
+from math import gcd, ceil, floor, sqrt
 
 
 def __factorize(n):
@@ -97,3 +97,52 @@ def factorize(N):
             factors.append(n)
 
     return factors
+
+
+def partial_quots(x):
+    """Returns the partial quotients of the continued fraction of x."""
+    num, den = x.as_integer_ratio()
+
+    quot, mod = divmod(num, den)
+    partials = [quot]
+    num = mod
+
+    while num > 0:
+        quot, mod = divmod(den, num)
+        partials.append(quot)
+        num, den = mod, num
+
+    return partials
+
+
+def qth_conv(x, q):
+    """Returns the qth convergent to the continued fraction of x."""
+    if q == 0:
+        return partial_quots(x)[0]
+
+    partials = partial_quots(x)
+    acc = partials[q]
+
+    for p in reversed(partials[:q]):
+        acc = p + 1 / acc
+    return acc
+
+
+def denominator(x, qmax):
+    """Finds the denominator q of the best rational approximation p/q for x
+    with q < qmax."""
+    y = x
+    q0, q1, q2 = 0, 1, 0
+
+    while True:
+        z = y - floor(y)  # decimal part of y
+        if z < 0.5 / qmax**2:
+            return q1
+
+        y = 1 / z
+        q2 = floor(y) * q1 + q0
+
+        if q2 >= qmax:
+            return q1
+
+        q0, q1 = q1, q2
