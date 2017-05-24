@@ -6,8 +6,7 @@ import linalg as la
 import cmath
 import math
 
-# import numpy as np
-# np.set_printoptions(formatter={'float': lambda x: "{:.2f}\t".format(x)})
+# FIXME: Lacking documentation.
 
 
 class Qureg:
@@ -48,7 +47,8 @@ def phase_shift_op(phi):
                   0, cmath.exp(1j * phi), m=2, n=2)
 
 
-hadamard_op = mat = la.mat(2**-0.5, 2**-0.5, 2**-0.5, -2**-0.5, m=2, n=2)
+hadamard_op = mat = la.mat(1,  1, \
+                           1, -1, m=2, n=2) * 2**-0.5
 
 
 def control_phase_op(k):
@@ -65,49 +65,54 @@ cnot = la.mat(1, 0, 0, 0,
 # 1-Qubit Gates
 
 
-def unitary(width, target, mat):
-    """Build the unitary operation that will act upon the target qubit."""
-    if width == 1:
-        return mat
+def unitary_op(width, target, mat):
+    """Build the 2x2 unitary operation that will act upon the target qubit."""
+    assert 0 <= target < width
 
-    m = la.mat(1, 1, 1, 1, m=2, n=2)
-
+    l = la.mat(1, m=1, n=1)
     for _ in range(target):
-        m = la.tensor(m, identity_op)
+        l ^= identity_op
 
-    if width > 1:
-        m = la.tensor(m, mat)
-
+    r = la.mat(1, m=1, n=1)
     for _ in range(width - (target + 1)):
-        m = la.tensor(m, identity_op)
+        r ^= identity_op
+
+    return l ^ mat ^ r
 
 
-def gate1(qureg, target, mat):
-    qureg.amplitudes *= unitary(qureg.width, target, mat)
+def gate1(qureg, target, mat, apply_to_all):
+    if apply_to_all:
+        for i in range(qureg.width):
+            qureg.amplitudes *= unitary_op(qureg.width, i, mat)
+    else:
+        qureg.amplitudes *= unitary_op(qureg.width, target, mat)
+
     return qureg
 
 
-def phase_shift_gate(qureg, phi, target=0):
-    return gate1(qureg, target, phase_shift_op(phi))
+# FIXME: UNTESTED
+def phase_shift_gate(qureg, phi, target=0, apply_to_all=False):
+    return gate1(qureg, target, phase_shift_op(phi), apply_to_all)
 
 
-def hadamard(qureg, target=0):
-    return gate1(qureg, target, hadamard_op)
+def hadamard_gate(qureg, target=0, apply_to_all=False):
+    return gate1(qureg, target, hadamard_op, apply_to_all)
 
 
-# 2-qubit gates
+# 2-Qubit Gates
+# FIXME: UNTESTED
 
 
 def gate2(qureg, control, target, mat):
     pass
 
 
-def control_phase_shift(qureg, control, target):
+def control_phase_shift_gate(qureg, control, target):
     mat = control_phase_op(control - target)
     return gate2(qureg, control, target, mat)
 
 
-def control_not(qureg, control, target):
+def cnot_gate(qureg, control, target):
     return gate2(qureg, control, target, cnot)
 
 
