@@ -7,6 +7,7 @@ import cmath
 import math
 
 # FIXME: Lacking documentation.
+# FIXME: The bits are in reverse order!
 
 
 class Qureg:
@@ -125,3 +126,21 @@ def mod_exp():
 
 def inv_qft():
     pass
+
+
+# Test
+
+
+def _nth_bit(x, n):
+    return (x >> n) & 1
+
+
+def _toggle_bit(x, n):
+    return x ^ (1 << n)
+
+
+# FIXME: Can we use this trick with hadamard and phase shift gates?
+
+
+def _cnot(x, control, target):
+    return _toggle_bit(x, target) if _nth_bit(x, control) else x
