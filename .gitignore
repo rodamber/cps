@@ -99,3 +99,5 @@ ENV/
 
 # mypy
 .mypy_cache/
+/shor_example.py
+/quantum_computer_example.py
