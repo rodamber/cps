@@ -6,40 +6,6 @@ from math import gcd, ceil, floor, sqrt
 from quantum import shor
 
 
-def __factorize(n):
-    """Classical implementation of integer factorization. This is used just to
-    test."""
-
-    factors = []
-    d = 2
-    saved = n
-
-    while d * d <= n:
-        while (n % d) == 0:
-            factors.append(d)
-            n //= d
-        d += 1
-    if n > 1:
-        factors.append(n)
-
-    from numpy import prod
-    assert prod(factors) == saved
-
-    return factors
-
-
-def __order(x, N):
-    # We want to find r such that x**r % N == 1
-    assert gcd(x, N) == 1
-
-    r = 2
-    while pow(x, r, N) != 1:
-        r += 1
-
-    assert pow(x, r, N) == 1
-    return r
-
-
 def prime(n):
     """Primality test by trial division."""
 
@@ -73,7 +39,7 @@ def factorize_helper(N):
                 found(factors, d)
                 N //= d
             else:
-                r = shor(x, N)
+                r = shor(N, x)
                 y = r // 2
                 if r % 2 == 0 and 1 < y < N - 1:
                     f1 = gcd(y - 1, N)
