@@ -1,12 +1,8 @@
-#!/usr/bin/env python3
-
 import math
 import cmath
 
 
 class QuMem:
-    """Represents quantum memory with arbitrary width (number of qubits)."""
-
     def __init__(self, t, n):
         self.t = t  # left width
         self.n = n  # right width
@@ -41,12 +37,6 @@ class QuMem:
         return s[:-3]
 
     def hadamard(self):
-        """In the Shor algorithm we apply the Hadamard gate to the first t bits
-        of the memory. This simulates that by (1) setting the amplitude of all
-        the states where the last n bits are different from zero, and (2)
-        giving the same amplitude to the other states."""
-
-        # FIXME: Review the documentation.
         for i, (_, left, right) in enumerate(self):
             if right == 0:
                 self.amplitudes[i] = 1 / math.sqrt(2**self.t)
@@ -61,10 +51,12 @@ class QuMem:
         new_amplitudes = []
         N = 2**self.t
 
+        w__ = cmath.exp(2 * math.pi * 1j / N)
         for k, _ in enumerate(self):
+            w_k = w__**k
             s = 0
             for j in range(N):
-                wjk = cmath.exp(2 * math.pi * 1j * j * k / N)
+                wjk = w_k**j
                 s += wjk * self.amplitudes[j]
             new_amplitudes.append(s / math.sqrt(N))
         self.amplitudes = new_amplitudes
@@ -92,21 +84,29 @@ def denominator(x, qmax):
 
 
 def shor(N, x):
-    n = N.bit_length()
-    t = math.ceil(math.log(N**2, 2))  # s.t. N**2 <= 2**t < 2 * N**2
+    print("Running Shor's algorithm.")
+    print("Random base =", x)
 
-    measured = QuMem(t, n).hadamard().mod_exp(x, N).qft().measure()
+    while True:
+        n = N.bit_length()
+        t = math.ceil(math.log(N**2, 2))  # s.t. N**2 <= 2**t < 2 * N**2
 
-    if measured == 0:
-        print("Measured 0. Trying again.")
-        shor(N, x)
-    else:
-        print("Measured", measured)
+        measured = QuMem(t, n).hadamard().mod_exp(x, N).qft().measure()
 
-    r = denominator(measured / 2**t, N)
+        if measured == 0:
+            print("Measured 0. Trying again.")
+        else:
+            q = denominator(measured / 2**t, N)
+            print("Denominator of the best approximation:", q)
 
-    if pow(x, r, N) == 1:
-        print("Found period:", x, "^", r, "mod", N, "= 1")
-        return r
-    else:
-        shor(N, x)
+            for i in range(1, math.ceil(N / q)):
+                mod = pow(x, i * q, N)
+
+                print("{}^{} mod {} = {}".format(x, q, N, mod))
+
+                if mod == 1:
+                    print("Found the period:", i * q)
+                    return i * q
+
+            print(s + "Failed to find the period.")
+            return 0
