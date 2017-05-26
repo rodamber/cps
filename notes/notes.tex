@@ -6,91 +6,173 @@
 \usepackage[utf8]{inputenc}
 
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{braket}
+\usepackage{listings}
 \usepackage{mathtools}
 
-% \title{Cryptography and Security Protocols\\ Project Report}
-\title{Shor's Algorithm}
-% \author{
-%   José Semedo\\
-%   ist178294
-%   \and
-%   Rodrigo Bernardo\\
-%   ist178942
-% }
+\title{Simulation of Shor's Algorithm Report}
+\author{
+  José Semedo\\
+  ist178294
+  \and
+  Rodrigo Bernardo\\
+  ist178942
+}
 
 \date{}
 
 \begin{document}
 \maketitle
 
-% \section{Shor's Algorithm}
+\section{Introduction}
+In this project we studied and implemented a simulator of Shor's quantum
+algorithm for integer factorization. The problem is reduced to the problem of
+order finding. Although it is not known if order finding is hard in a classical
+setting, Shor \cite{Shor} demonstrated that it is solvable in polynomial time if
+one has access to a quantum computer, thus showing integer factorization is
+solvable in polynoial time.
 
-\begin{enumerate}
-\item Pick $x$ at random s.t. $1<x<N$
 
-\item If $GCD(x,N) = d \neq 1$ then $d$ is a factor of $N$, so we recurse on $N/d$.
-Else $x$ and $N$ are coprime, so we try to find the multiplicative order of $x$
-modulo $N$.
+\section{Language and Tools}
+Our simulation is implemented in Python 3, together with the numpy library.
 
-The quantum computer is initialized to $\ket{\psi_0} = \ket{0}\ket{0}$.
-Register one has $t$ qubits ($N^2 \leq 2^t < 2N^2$), and register two has $n =
-\lceil{\log _2 N}\rceil$ qubits.
 
-\item Apply the Hadamard operator $t$ times to the first register, yielding
-  \begin{equation}
-    \ket{\psi_1} = H^{\otimes{t}}\ket{\psi_0}
-    = \frac{1}{\sqrt{2^t}}\sum_{j=0}^{2^t-1}\ket{j}\ket{0}
-    \,.
-  \end{equation}
+\section{Implementation Overview}
 
-\item Apply the linear operator $V_x(\ket{j}\ket{k}) = \ket{j}\ket{k+x^j}$ to obtain 
+\subsection{Memory}
+The algorithm takes an odd integer $N$, such that it is not a prime nor a power
+of a prime, and an integer $x, 1 < x < N$, and tries to find the multiplicative
+order of $x$ modulo $N$.
 
-  \begin{equation}
-    \begin{aligned}
-      \ket{\psi_2} &= V_x\ket{\psi_1}\\
-      &= \frac{1}{\sqrt{2^t}}\sum_{j=0}^{2^{t}-1}\ket{j}\ket{x^j}\\
-      &= \frac{1}{\sqrt{2^t}}\sum_{b=0}^{r-1}\sum_{a=0}^{\frac{2^t}{r}-1}\ket{ar + b}\ket{x^b}
-      \,.
-    \end{aligned}
-  \end{equation}
+It starts by allocating $t + n$ qubits, with $n = \lceil{\log_2 N}\rceil$ and
+$N^2 \leq 2^t < 2N^2$, and initializes the state to $\ket{\psi_{0}} = \ket{0,
+0}$.
 
-\item Measure the second register, fixing $b = b_0$, where $b_0$ is a random
-  number between $0$ and $r-1$, obtaining
-  \begin{equation}
-    \ket{\psi_3}
-    = \sqrt{\frac{r}{2^t}}\sum_{a=0}^{\frac{2^t}{r}-1}\ket{ar +
-      b_0}\ket{x^{b_0}}
-    \,.
-  \end{equation}
+We represent the memory by explicitly saving all the $2^{t+n}$ possible states and
+their corresponding amplitudes, equivalent to the representation of the quantum
+state as a linear vector combination $\ket{\psi} =
+\sum_{j=0}^{t+n}a_{j}\ket{j}$.
 
-\item Apply the inverse Fourier transform, $DFT^{\dagger}(\ket{k}) =
-  \frac{1}{\sqrt{N}}\sum_{j=0}^{N-1}e^{- 2\pi i jk/N}\ket{j}$, yielding
-  \begin{equation}
-    \ket{\psi_4}
-    = \frac{1}{\sqrt{r}}\left(\sum_{j=0}^{2^t-1}
-      \left[\frac{1}{2^{t}/r}\sum_{a=0}^{\frac{2^t}{r}-1}e^{\frac{- 2\pi ija}{2^{t}/r}}\right]
-      e^{- 2\pi ijb_{0}/2^t}\ket{j}\right)\ket{x^{b_0}}
-    \,.
-  \end{equation}
+\subsection{Hadamard Gates}
+The algorithm then applies Hadamard gates to the first $t$ qubits. This creates
+a quantum superposition where the amplitudes are equidistributed between the
+first t bits. The state becomes $\ket{\psi_1} = H^{\otimes{t}}\ket{\psi_0} =
+2^{-t/2}\sum_{j=0}^{2^t-1}\ket{j}\ket{0}$.
 
-\item Measuring the first register, we get the value $k_{0}2^{t}/r$, for some
-  $k_{0} \in \{ 0, 1, ..., r-1 \}$. If we obtain $k_{0} = 0$ we run the
-  algorithm again. Else we divide $k_{0}2^{t}/r$ by $2^{t}$, obtaining $k_{0}/r$.
+We simulate this step by explicitly reaching for the states where the last $n$
+qubits are $\ket{0}$ and setting their amplitudes to $2^{-t/2}$.
 
-\item To extract $r$, we represent $k_{0}/r$ by a finite continued fraction,
-  and then ... ???
+\subsection{Modular Exponentiation}
 
-\end{enumerate}
+In the next step, the operator $\ket{j, k} \mapsto \ket{j, k + x^j \pmod N}$ is
+applied to all the qubits, giving the state
+$\ket{\psi_2} =
+2^{-t/2}\sum_{j=0}^{2^t-1}\ket{j}\ket{x^b}$.
+
+This step is fast because it generates all the powers
+simultaneously by quantum parallelism.
+
+Here we take advantage of Python's built-in modular exponentiation function and
+simulate this by applying the operator to all the states sequentially.
+
+\subsection{Quantum Fourier Transform}
+The discrete Fourier transform is then applied to the first t qubits. This step
+is $O(n2^{n})$ if done classically, but can be done polynomially with a quantum
+computer.
+
+We simulate this step by sequentially applying the formula
+$\ket{k} \mapsto 2^{-t/2} \sum_{j=0}^{2^{t}-1}\omega^{jk}\ket{j}$, where
+$\omega^{jk} = e^{2\pi i j k / N}$,
+to all the possible states, i.e., for each state $\ket{\phi} = \ket{k}$, its
+amplitude is changed to $2^{-t/2} \sum_{j=0}^{2^{t}-1}\omega^{jk}$.
+
+After the quantum state of the system is
+$2^{-t/2}\sum_{j=0}^{2^{t}-1}\sum_{k=0}^{2^{t}-1}\omega^{jk}\ket{k}\ket{x^{j}}$
+
+
+\subsection{Obtaining the Order}
+Finally, a measurement is taken, leaving the state to collapse to one vector of
+the computational basis. After the application of the previous operations we are
+left with an approximation of a number $a/r, a \in \mathbb{Z}$ with high
+probability.
+
+We use a known efficient classical algorithm \cite{HW} for extracting $r$ based
+on the best approximation property of the convergents of continued fractions. If
+we succeed to find $r$, we return it, else the algorithm is restarted.
+
+
+\section{Execution}
+
+We can run the program by issuing the command
+\begin{lstlisting}
+  $ ./shor.py N
+\end{lstlisting}
+
+\subsection{Examples}
+
+\begin{lstlisting}
+  $ ./shor.py 15
+  | picked random a = 3
+  | got lucky, 15 = 3 * 5, trying again...
+  |---------------------------------------------
+  | picked random a = 8
+  | measured 59, approximation for 0.23046875 is 3/13
+  | 8^13 mod 15 = 8
+  | failed, trying again ...
+  | measured 246, approximation for 0.9609375 is 1/1
+  | 8^1 mod 15 = 8
+  | failed, trying again ...
+  | measured 109, approximation for 0.42578125 is 3/7
+  | 8^7 mod 15 = 2
+  | failed, trying again ...
+  | measured 222, approximation for 0.8671875 is 7/8
+  | 8^8 mod 15 = 1
+  | got 8
+  | found factor: 15 = 5 * 3
+  5
+\end{lstlisting}
+
+
+\begin{lstlisting}
+  $ ./shor.py 21
+  | picked random a = 10
+  | measured 152, approximation for 0.296875 is 3/10
+  | 10^10 mod 21 = 4
+  | failed, trying again ...
+  | measured 342, approximation for 0.66796875 is 2/3
+  | 10^3 mod 21 = 13
+  | failed, trying again ...
+  | measured 37, approximation for 0.072265625 is 1/14
+  | 10^14 mod 21 = 16
+  | failed, trying again ...
+  | measured 53, approximation for 0.103515625 is 2/19
+  | 10^19 mod 21 = 10
+  | failed, trying again ...
+  | measured 42, approximation for 0.08203125 is 1/12
+  | 10^12 mod 21 = 1
+  | got 12
+  | found factor: 21 = 7 * 3
+  7 
+\end{lstlisting}
+
+\begin{thebibliography}{9}
+\bibitem{Shor}
+  Peter Shor,
+  \emph{Polynomial-Time Algorithms for Prime Factorization and Discrete
+Logarithms on a Quantum Computer}
+
+\bibitem{HW}
+  G. H. Hardy,
+  E. M. Wright,
+  \emph{Introduction to Theory of Numbers},
+  Oxford University Press,
+  4th Edition,
+  1975.
+
+\end{thebibliography}
 
 \end{document}
-
-
-
-
-
-
-
 
 
 

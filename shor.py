@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""Simulation of Shor's algorithm for order finding, with an application to
-integer factorization."""
+"""Simulation of Shor's algorithm for integer factorization."""
 
 import cmath
 import math
@@ -35,8 +34,6 @@ class QuMem:
                 self.amplitudes.append(0)
                 self.fst.append(fst)
                 self.lst.append(lst)
-
-        assert len(self.amplitudes) == 2**(t + n)
 
         # Initialize the memory to the state |0, 0>.
         self.amplitudes[0] = 1
@@ -139,7 +136,6 @@ def shor(N, a):
 
         if measure == 0:
             print("| measured zero, trying again ...")
-            print("|-----------------------------------------------")
         else:
             c = measure / 2**t
             q = denominator(c, N)
@@ -151,11 +147,10 @@ def shor(N, a):
             print("| {}^{} mod {} = {}".format(a, q, N, mod))
 
             if mod == 1:
-                print("| order is {}".format(q))
+                print("| got {}".format(q))
                 return q
             else:
-                print("| failed to find the order")
-                return None
+                print("| failed, trying again ...")
 
 
 def prime(n):
