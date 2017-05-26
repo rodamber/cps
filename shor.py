@@ -77,7 +77,8 @@ def hadamard(mem):
 
 
 def mod_exp(mem, x, N):
-    """Apply the operator |j, k> |-> |j, k + x^j mod N>."""
+    """Apply the operator |j, k> |-> |j, k + x^j mod N>. However, in Shor's
+    algorithm k = 0, so we just apply the modular exponentiation."""
     for i, (_, fst, lst) in enumerate(mem):
         mem.lst[i] = pow(x, fst, N)
     return mem
@@ -88,8 +89,8 @@ def qft(mem):
     new_amplitudes = []
     N = 2**mem.t
 
-    # Calculate root of unity step by step, as complex exponentiation seems to
-    # be expensive.
+    # Calculate root of unity in two steps, as complex exponentiation is
+    # expensive.
     w__ = cmath.exp(2 * math.pi * 1j / N)
 
     for k, _ in enumerate(mem):
@@ -123,6 +124,7 @@ def denominator(x, qmax):
 
 
 def shor(N, a):
+    """Simulation of Shor's algorithm for order finding."""
     assert 1 < a < N
 
     while True:
@@ -168,6 +170,7 @@ def prime(n):
 
 
 def odd_prime_power(n):
+    """Test if n is a power of an odd prime."""
     if n < 3:
         return False
     factor = 0
@@ -184,6 +187,7 @@ def odd_prime_power(n):
 
 
 def factorize(N):
+    """Applies Shor's algorithm to the problem of integer factorization."""
     assert N > 1
 
     if N % 2 == 0:
@@ -232,4 +236,7 @@ def factorize(N):
 
 if __name__ == '__main__':
     import sys
-    print(factorize(int(sys.argv[1])))
+    if len(sys.argv) < 2:
+        print("USAGE: shor.py <input>")
+    else:
+        print(factorize(int(sys.argv[1])))
